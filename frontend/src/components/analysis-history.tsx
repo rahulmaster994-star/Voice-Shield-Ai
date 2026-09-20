@@ -78,7 +78,8 @@ export default function AnalysisHistory({
       ) : (
         <ul className="mt-4 space-y-2">
           {analyses.map((record) => {
-            const meta = TIER_META[record.tier];
+            const tierKey = (record.tier?.toLowerCase() || "low") as keyof typeof TIER_ICON;
+            const meta = TIER_META[tierKey] || TIER_META.low;
             return (
               <li
                 key={record.id}
@@ -89,7 +90,7 @@ export default function AnalysisHistory({
                   style={{ color: meta.hex, background: `${meta.hex}18` }}
                   aria-hidden="true"
                 >
-                  {TIER_ICON[record.tier]}
+                  {TIER_ICON[tierKey] || "●"}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-vn-text">

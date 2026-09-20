@@ -122,7 +122,7 @@ export function sanitizeAnalysisResponse(
       typeof intent?.transcript === "string" ? intent.transcript : "(no transcript returned)",
     flags,
     triggered_intents: Array.isArray(intent?.triggered_intents)
-      ? intent.triggered_intents.filter((x) => typeof x === "string")
+      ? intent.triggered_intents.filter((x: unknown) => typeof x === "string")
       : Object.entries(flags)
           .filter(([, v]) => v)
           .map(([k]) => k),

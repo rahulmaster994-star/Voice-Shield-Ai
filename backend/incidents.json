@@ -1,0 +1,407 @@
+[
+  {
+    "incident_id": "INC-2026-0006",
+    "timestamp": "2026-09-12T09:19:37.797640+00:00",
+    "risk_level": "CRITICAL",
+    "status": "BLOCKED",
+    "reasons": [
+      "Prompt phrase mismatch: expected 'Blue Mango 30', heard ''",
+      "Definitive synthetic voice detected (98% probability \u2014 AI TTS confirmed)"
+    ],
+    "recommended_action": "BLOCK SIMULATED TRANSACTION",
+    "transcript": "",
+    "deepfake_result": {
+      "synthetic_probability": 0.9809,
+      "confidence": 0.9809,
+      "label": "synthetic",
+      "model_name": "motheecreator/Deepfake-audio-detection",
+      "model_version": "wav2vec2-deepfake-v1",
+      "status": "ONLINE_FINETUNED"
+    },
+    "speaker_result": {
+      "claimed_identity": "CFO",
+      "match": true
+    },
+    "liveness_result": {
+      "status": "PASS",
+      "liveness_confidence": 0.85,
+      "reasons": [
+        "Natural voice dynamic variation and acoustic frequency response verified"
+      ],
+      "metrics": {
+        "dynamic_variance": 0.002556,
+        "high_freq_ratio": 0.0675,
+        "spectral_flatness": 0.316,
+        "repetition_ratio": 0.005
+      }
+    },
+    "conversation_risk": {
+      "transcript": "",
+      "flags": {
+        "financial_request": false,
+        "otp_request": false,
+        "credential_request": false,
+        "account_change": false,
+        "urgency": false,
+        "secrecy": false,
+        "authority_claim": false,
+        "manipulation": false,
+        "threat_coercion": false
+      },
+      "triggered_intents": [],
+      "intent_risk_score": 0,
+      "status": "ANALYZED"
+    },
+    "challenge_result": {
+      "challenge_id": "CHAL-93C2150C",
+      "challenge_status": "FAILED",
+      "expected_phrase": "Blue Mango 30",
+      "transcript_heard": "",
+      "phrase_match": false,
+      "speaker_match": true,
+      "liveness": "PASS",
+      "synthetic_probability": 0.9809,
+      "reasons": [
+        "Prompt phrase mismatch: expected 'Blue Mango 30', heard ''",
+        "Definitive synthetic voice detected (98% probability \u2014 AI TTS confirmed)"
+      ]
+    }
+  },
+  {
+    "incident_id": "INC-2026-0005",
+    "timestamp": "2026-09-12T07:52:16.189032+00:00",
+    "risk_level": "CRITICAL",
+    "status": "BLOCKED",
+    "reasons": [
+      "Synthetic voice detected during challenge response (99% fake)",
+      "Speaker voiceprint did not match claimed identity"
+    ],
+    "recommended_action": "BLOCK SIMULATED TRANSACTION",
+    "transcript": "Velvete, Lantern 43",
+    "deepfake_result": {
+      "synthetic_probability": 0.9994,
+      "confidence": 0.9994,
+      "label": "synthetic",
+      "model_name": "motheecreator/Deepfake-audio-detection",
+      "model_version": "wav2vec2-deepfake-v1",
+      "status": "ONLINE_FINETUNED"
+    },
+    "speaker_result": {
+      "claimed_identity": "CFO",
+      "match": false
+    },
+    "liveness_result": {
+      "status": "PASS",
+      "liveness_confidence": 0.85,
+      "reasons": [
+        "Natural voice dynamic variation and acoustic frequency response verified"
+      ],
+      "metrics": {
+        "dynamic_variance": 0.006683,
+        "high_freq_ratio": 0.0249,
+        "spectral_flatness": 0.301,
+        "repetition_ratio": 0.011
+      }
+    },
+    "conversation_risk": {
+      "transcript": "Velvete, Lantern 43",
+      "flags": {
+        "financial_request": false,
+        "otp_request": false,
+        "credential_request": false,
+        "account_change": false,
+        "urgency": false,
+        "secrecy": false,
+        "authority_claim": false,
+        "manipulation": false,
+        "threat_coercion": false
+      },
+      "triggered_intents": [],
+      "intent_risk_score": 0,
+      "status": "ANALYZED"
+    },
+    "challenge_result": {
+      "challenge_id": "CHAL-C88197C6",
+      "challenge_status": "FAILED",
+      "expected_phrase": "Velvet Lantern 43",
+      "transcript_heard": "Velvete, Lantern 43",
+      "phrase_match": true,
+      "speaker_match": false,
+      "liveness": "PASS",
+      "synthetic_probability": 0.9994,
+      "reasons": [
+        "Synthetic voice detected during challenge response (99% fake)",
+        "Speaker voiceprint did not match claimed identity"
+      ]
+    }
+  },
+  {
+    "incident_id": "INC-2026-0004",
+    "timestamp": "2026-09-12T07:51:48.263807+00:00",
+    "risk_level": "CRITICAL",
+    "status": "BLOCKED",
+    "reasons": [
+      "Synthetic voice detected during challenge response (100% fake)"
+    ],
+    "recommended_action": "BLOCK SIMULATED TRANSACTION",
+    "transcript": "Solar shield 82",
+    "deepfake_result": {
+      "synthetic_probability": 1.0,
+      "confidence": 1.0,
+      "label": "synthetic",
+      "model_name": "motheecreator/Deepfake-audio-detection",
+      "model_version": "wav2vec2-deepfake-v1",
+      "status": "ONLINE_FINETUNED"
+    },
+    "speaker_result": {
+      "claimed_identity": "Rahul",
+      "match": true
+    },
+    "liveness_result": {
+      "status": "PASS",
+      "liveness_confidence": 0.85,
+      "reasons": [
+        "Natural voice dynamic variation and acoustic frequency response verified"
+      ],
+      "metrics": {
+        "dynamic_variance": 0.007892,
+        "high_freq_ratio": 0.1073,
+        "spectral_flatness": 0.374,
+        "repetition_ratio": 0.005
+      }
+    },
+    "conversation_risk": {
+      "transcript": "Solar shield 82",
+      "flags": {
+        "financial_request": false,
+        "otp_request": false,
+        "credential_request": false,
+        "account_change": false,
+        "urgency": false,
+        "secrecy": false,
+        "authority_claim": false,
+        "manipulation": false,
+        "threat_coercion": false
+      },
+      "triggered_intents": [],
+      "intent_risk_score": 0,
+      "status": "ANALYZED"
+    },
+    "challenge_result": {
+      "challenge_id": "CHAL-01736503",
+      "challenge_status": "FAILED",
+      "expected_phrase": "Solar Shield 82",
+      "transcript_heard": "Solar shield 82",
+      "phrase_match": true,
+      "speaker_match": true,
+      "liveness": "PASS",
+      "synthetic_probability": 1.0,
+      "reasons": [
+        "Synthetic voice detected during challenge response (100% fake)"
+      ]
+    }
+  },
+  {
+    "incident_id": "INC-2026-0003",
+    "timestamp": "2026-09-12T07:51:39.552002+00:00",
+    "risk_level": "CRITICAL",
+    "status": "BLOCKED",
+    "reasons": [
+      "Synthetic voice detected during challenge response (99% fake)"
+    ],
+    "recommended_action": "BLOCK SIMULATED TRANSACTION",
+    "transcript": "solar shield KT2",
+    "deepfake_result": {
+      "synthetic_probability": 0.9999,
+      "confidence": 0.9999,
+      "label": "synthetic",
+      "model_name": "motheecreator/Deepfake-audio-detection",
+      "model_version": "wav2vec2-deepfake-v1",
+      "status": "ONLINE_FINETUNED"
+    },
+    "speaker_result": {
+      "claimed_identity": "Rahul",
+      "match": true
+    },
+    "liveness_result": {
+      "status": "PASS",
+      "liveness_confidence": 0.85,
+      "reasons": [
+        "Natural voice dynamic variation and acoustic frequency response verified"
+      ],
+      "metrics": {
+        "dynamic_variance": 0.00691,
+        "high_freq_ratio": 0.1271,
+        "spectral_flatness": 0.334,
+        "repetition_ratio": 0.016
+      }
+    },
+    "conversation_risk": {
+      "transcript": "solar shield KT2",
+      "flags": {
+        "financial_request": false,
+        "otp_request": false,
+        "credential_request": false,
+        "account_change": false,
+        "urgency": false,
+        "secrecy": false,
+        "authority_claim": false,
+        "manipulation": false,
+        "threat_coercion": false
+      },
+      "triggered_intents": [],
+      "intent_risk_score": 0,
+      "status": "ANALYZED"
+    },
+    "challenge_result": {
+      "challenge_id": "CHAL-01736503",
+      "challenge_status": "FAILED",
+      "expected_phrase": "Solar Shield 82",
+      "transcript_heard": "solar shield KT2",
+      "phrase_match": true,
+      "speaker_match": true,
+      "liveness": "PASS",
+      "synthetic_probability": 0.9999,
+      "reasons": [
+        "Synthetic voice detected during challenge response (99% fake)"
+      ]
+    }
+  },
+  {
+    "incident_id": "INC-2026-0002",
+    "timestamp": "2026-09-12T04:44:17.810244+00:00",
+    "risk_level": "CRITICAL",
+    "status": "BLOCKED",
+    "reasons": [
+      "Prompt phrase mismatch: expected 'Velvet Breeze 20', heard 'Hello? Hello?'",
+      "Speaker voiceprint did not match claimed identity"
+    ],
+    "recommended_action": "BLOCK SIMULATED TRANSACTION",
+    "transcript": "Hello? Hello?",
+    "deepfake_result": {
+      "synthetic_probability": 0.0061,
+      "confidence": 0.9939,
+      "label": "bonafide",
+      "model_name": "motheecreator/Deepfake-audio-detection",
+      "model_version": "wav2vec2-deepfake-v1",
+      "status": "ONLINE_FINETUNED"
+    },
+    "speaker_result": {
+      "claimed_identity": "CFO",
+      "match": false
+    },
+    "liveness_result": {
+      "status": "PASS",
+      "liveness_confidence": 0.85,
+      "reasons": [
+        "Natural voice dynamic variation and acoustic frequency response verified"
+      ],
+      "metrics": {
+        "dynamic_variance": 0.004776,
+        "high_freq_ratio": 0.0217,
+        "spectral_flatness": 0.254,
+        "repetition_ratio": 0.005
+      }
+    },
+    "conversation_risk": {
+      "transcript": "Hello? Hello?",
+      "flags": {
+        "financial_request": false,
+        "otp_request": false,
+        "credential_request": false,
+        "account_change": false,
+        "urgency": false,
+        "secrecy": false,
+        "authority_claim": false,
+        "manipulation": false,
+        "threat_coercion": false
+      },
+      "triggered_intents": [],
+      "intent_risk_score": 0,
+      "status": "ANALYZED"
+    },
+    "challenge_result": {
+      "challenge_id": "CHAL-5DA6608C",
+      "challenge_status": "FAILED",
+      "expected_phrase": "Velvet Breeze 20",
+      "transcript_heard": "Hello? Hello?",
+      "phrase_match": false,
+      "speaker_match": false,
+      "liveness": "PASS",
+      "synthetic_probability": 0.0061,
+      "reasons": [
+        "Prompt phrase mismatch: expected 'Velvet Breeze 20', heard 'Hello? Hello?'",
+        "Speaker voiceprint did not match claimed identity"
+      ]
+    }
+  },
+  {
+    "incident_id": "INC-2026-0001",
+    "timestamp": "2026-09-12T04:42:05.173136+00:00",
+    "risk_level": "CRITICAL",
+    "status": "BLOCKED",
+    "reasons": [
+      "Prompt phrase mismatch: expected 'Golden Valley 51', heard ''",
+      "Liveness check failed during challenge response"
+    ],
+    "recommended_action": "BLOCK SIMULATED TRANSACTION",
+    "transcript": "",
+    "deepfake_result": {
+      "synthetic_probability": 0.0003,
+      "confidence": 0.9997,
+      "label": "bonafide",
+      "model_name": "motheecreator/Deepfake-audio-detection",
+      "model_version": "wav2vec2-deepfake-v1",
+      "status": "ONLINE_FINETUNED"
+    },
+    "speaker_result": {
+      "claimed_identity": "Rahul",
+      "match": true
+    },
+    "liveness_result": {
+      "status": "FAIL",
+      "liveness_confidence": 0.1,
+      "reasons": [
+        "Unnaturally flat acoustic dynamics detected",
+        "Suspicious repeated audio frames (possible replay loop)"
+      ],
+      "metrics": {
+        "dynamic_variance": 0.0,
+        "high_freq_ratio": 0.0324,
+        "spectral_flatness": 0.002,
+        "repetition_ratio": 0.686
+      }
+    },
+    "conversation_risk": {
+      "transcript": "",
+      "flags": {
+        "financial_request": false,
+        "otp_request": false,
+        "credential_request": false,
+        "account_change": false,
+        "urgency": false,
+        "secrecy": false,
+        "authority_claim": false,
+        "manipulation": false,
+        "threat_coercion": false
+      },
+      "triggered_intents": [],
+      "intent_risk_score": 0,
+      "status": "ANALYZED"
+    },
+    "challenge_result": {
+      "challenge_id": "CHAL-86961106",
+      "challenge_status": "FAILED",
+      "expected_phrase": "Golden Valley 51",
+      "transcript_heard": "",
+      "phrase_match": false,
+      "speaker_match": true,
+      "liveness": "FAIL",
+      "synthetic_probability": 0.0003,
+      "reasons": [
+        "Prompt phrase mismatch: expected 'Golden Valley 51', heard ''",
+        "Liveness check failed during challenge response"
+      ]
+    }
+  }
+]

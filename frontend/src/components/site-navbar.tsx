@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const NAV_LINKS = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "/demo", label: "Live Demo" },
-  { href: "#technology", label: "Technology" },
-  { href: "#about", label: "About" },
+  { href: "/#how-it-works", label: "Architecture" },
+  { href: "/demo", label: "SOC Console" },
+  { href: "/simulator", label: "Attack Simulator" },
+  { href: "/ledger", label: "Evidence Ledger" },
+  { href: "/mobile-demo", label: "Mobile QR" },
+  { href: "/#comparison", label: "Defense vs Binary" },
 ];
 
 export default function SiteNavbar() {

@@ -71,8 +71,8 @@ export default function VerificationPanel({
 }: VerificationPanelProps) {
   const { push } = useToast();
   const tierMeta = TIER_META[tier];
-  const isCritical = tier === "critical";
-  const isMedium = tier === "medium";
+  const isCritical = tier === "critical" || tier === "CRITICAL";
+  const isMedium = tier === "medium" || tier === "MEDIUM";
   const showPanel = tierMeta.rank >= 2;
 
   if (!showPanel && !isMedium) {

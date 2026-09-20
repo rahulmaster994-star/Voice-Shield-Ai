@@ -7,3 +7,8 @@ transformers
 speechbrain
 faster-whisper
 numpy
+scipy
+scikit-learn
+librosa
+soundfile
+sqlalchemy

@@ -42,14 +42,14 @@ export const SCENARIOS: ScenarioConfig[] = [
   },
 ];
 
-export const SCENARIO_LABELS: Record<ScenarioType, string> = {
+export const SCENARIO_LABELS: Record<string, string> = {
   genuine: "Genuine Voice",
   ai_cloned: "AI-Cloned Voice",
   ai_cloned_scam: "AI-Cloned Scam Call",
   known_person_mismatch: "Known-Person Mismatch",
 };
 
-export const SCENARIO_DEFAULT_IDENTITY: Record<ScenarioType, string> = {
+export const SCENARIO_DEFAULT_IDENTITY: Record<string, string> = {
   genuine: "Known Contact",
   ai_cloned: "Family Member",
   ai_cloned_scam: "Bank Branch Manager (SBI)",
@@ -70,7 +70,7 @@ export const CLAIMED_IDENTITY_OPTIONS = [
   ...CLAIMED_IDENTITIES,
 ] as const;
 
-const mockResponses: Record<ScenarioType, AnalysisResponse> = {
+const mockResponses: Record<string, AnalysisResponse> = {
   genuine: {
     voice_authenticity: {
       synthetic_probability: 0.08,

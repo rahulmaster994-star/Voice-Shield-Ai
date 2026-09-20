@@ -12,7 +12,7 @@ export interface TierMeta {
   ringHex: string;
 }
 
-export const TIER_META: Record<RiskTier, TierMeta> = {
+export const TIER_META: Record<string, TierMeta> = {
   low: {
     label: "Low",
     rank: 0,
@@ -58,6 +58,10 @@ export const TIER_META: Record<RiskTier, TierMeta> = {
     ringHex: "#f43f5e",
   },
 };
+TIER_META.LOW = TIER_META.low;
+TIER_META.MEDIUM = TIER_META.medium;
+TIER_META.HIGH = TIER_META.high;
+TIER_META.CRITICAL = TIER_META.critical;
 
 /** Tiers ordered from safest to most critical. */
 export const TIER_ORDER: RiskTier[] = ["low", "medium", "high", "critical"];
