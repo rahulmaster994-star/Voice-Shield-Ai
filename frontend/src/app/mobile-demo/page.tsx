@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { API_BASE, getWebSocketUrl } from '@/lib/api';
+import { createHostPeer, AudioPacket } from '@/lib/webrtc-bridge';
 import SocMenuBar from '@/components/soc-menu-bar';
 import GalaxyBackground from '@/components/GalaxyBackground';
 import { Smartphone, Copy, Check, ShieldCheck, Radio, Activity, CheckCircle2 } from 'lucide-react';
@@ -27,10 +28,40 @@ export default function MobileDemo() {
       });
   }, []);
 
-  // Connect laptop viewer websocket to listen for incoming mobile audio
+  // WebRTC Real-Time Bridge + WebSocket listener
   useEffect(() => {
     if (!sessionId) return;
 
+    let hostPeerInstance: any = null;
+
+    // 1. Start WebRTC Host Peer (works across cell networks & zero-config)
+    createHostPeer(sessionId, {
+      onConnected: () => {
+        console.log('[MobileDemo] Phone paired via WebRTC!');
+        setIsMobilePaired(true);
+      },
+      onDisconnected: () => {
+        console.log('[MobileDemo] Phone disconnected from WebRTC');
+        setIsMobilePaired(false);
+      },
+      onData: (packet: AudioPacket) => {
+        setIsMobilePaired(true);
+        if (packet.waveform && packet.waveform.length > 0) {
+          setLiveWaveform(packet.waveform);
+        }
+        if (packet.threatLevel) {
+          setLiveRisk({
+            risk_level: packet.threatLevel,
+            synthetic_probability: packet.syntheticScore || 0.1,
+            reasons: packet.reasons || ['Acoustic analysis verified by probe'],
+          });
+        }
+      },
+    }).then((inst) => {
+      hostPeerInstance = inst;
+    });
+
+    // 2. Connect laptop viewer websocket if backend is active
     try {
       const wsUrl = getWebSocketUrl(sessionId, 'viewer');
       const ws = new WebSocket(wsUrl);
@@ -80,16 +111,27 @@ export default function MobileDemo() {
       return () => {
         clearInterval(pollInterval);
         ws.close();
+        if (hostPeerInstance) hostPeerInstance.destroy();
       };
     } catch (e) {
       console.warn('WS viewer connect err:', e);
+      return () => {
+        if (hostPeerInstance) hostPeerInstance.destroy();
+      };
     }
   }, [sessionId]);
 
-  // Always use the PUBLIC deployed URL — never localhost — so phones can reach it.
+  // CRITICAL: Always use the PUBLIC deployed URL — NEVER localhost — so phones can reach it when scanning!
+  const isLocalHost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || 
+     window.location.hostname === '127.0.0.1' ||
+     window.location.hostname.startsWith('192.168.') ||
+     window.location.hostname.startsWith('10.'));
+
   const publicBase =
     process.env.NEXT_PUBLIC_APP_URL ||
-    (typeof window !== 'undefined' ? window.location.origin : 'https://voice-shield-ai.vercel.app');
+    (!isLocalHost && typeof window !== 'undefined' ? window.location.origin : 'https://voice-shield-ai.vercel.app');
+
   const effectiveBase = customHost.trim()
     ? (customHost.startsWith('http') ? customHost : `http://${customHost}`)
     : publicBase;

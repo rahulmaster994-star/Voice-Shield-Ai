@@ -31,12 +31,16 @@ export default function SocMenuBar({ currentRoute = "/demo", isBackendOnline }: 
   const [sessionId, setSessionId] = useState<string>("sih-session-2026");
   const [isMobileConnected, setIsMobileConnected] = useState(false);
 
-  // Always use the PUBLIC deployed URL for QR so phones can actually reach it.
-  // process.env.NEXT_PUBLIC_APP_URL must be set to https://voice-shield-ai.vercel.app on Vercel.
-  // Fallback: use window.location.origin (works if accessed from a public / LAN URL).
+  // CRITICAL: Always use the PUBLIC deployed URL for QR so phones can reach it when scanning!
+  const isLocalHost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || 
+     window.location.hostname === '127.0.0.1' ||
+     window.location.hostname.startsWith('192.168.') ||
+     window.location.hostname.startsWith('10.'));
+
   const publicBase =
     process.env.NEXT_PUBLIC_APP_URL ||
-    (typeof window !== 'undefined' ? window.location.origin : 'https://voice-shield-ai.vercel.app');
+    (!isLocalHost && typeof window !== 'undefined' ? window.location.origin : 'https://voice-shield-ai.vercel.app');
 
   useEffect(() => {
 
@@ -59,9 +63,20 @@ export default function SocMenuBar({ currentRoute = "/demo", isBackendOnline }: 
     return () => clearInterval(interval);
   }, []);
 
-  // Poll or check status when modal is open
+  // Poll or check status when modal is open + WebRTC host listener
   useEffect(() => {
     if (!showQrModal || !sessionId) return;
+
+    let peerInstance: any = null;
+    import('@/lib/webrtc-bridge').then(({ createHostPeer }) => {
+      createHostPeer(sessionId, {
+        onConnected: () => setIsMobileConnected(true),
+        onDisconnected: () => setIsMobileConnected(false),
+        onData: () => setIsMobileConnected(true),
+      }).then((inst) => {
+        peerInstance = inst;
+      });
+    }).catch(() => {});
 
     const checkPairing = () => {
       fetch(`${API_BASE}/session/status/${sessionId}`)
@@ -74,7 +89,10 @@ export default function SocMenuBar({ currentRoute = "/demo", isBackendOnline }: 
 
     checkPairing();
     const interval = setInterval(checkPairing, 2500);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (peerInstance) peerInstance.destroy();
+    };
   }, [showQrModal, sessionId]);
 
   const mobileUrl = `${publicBase.replace(/\/+$/, '')}/mobile-client/${sessionId}`;

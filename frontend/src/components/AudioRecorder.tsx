@@ -8,9 +8,11 @@ import { getWebSocketUrl } from '@/lib/api';
 
 interface AudioRecorderProps {
   className?: string;
+  onAudioChunk?: (pcm: Int16Array, floatArray: Float32Array) => void;
+  onRecordingChange?: (isRecording: boolean) => void;
 }
 
-export default function AudioRecorder({ className }: AudioRecorderProps) {
+export default function AudioRecorder({ className, onAudioChunk, onRecordingChange }: AudioRecorderProps) {
   const [error, setError] = useState<string | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
   const processor = useRef<ScriptProcessorNode | null>(null);
@@ -58,7 +60,8 @@ export default function AudioRecorder({ className }: AudioRecorderProps) {
 
       ws.current.onerror = (err) => {
         console.error("WebSocket error:", err);
-        setError("WebSocket connection failed.");
+        // Do not block UI with error if WebRTC or offline fallback is active
+        if (!isMobile) setError("WebSocket connection failed.");
       };
 
       ws.current.onmessage = (event) => {
@@ -80,16 +83,20 @@ export default function AudioRecorder({ className }: AudioRecorderProps) {
       processor.current = audioContext.current.createScriptProcessor(4096, 1, 1);
       
       processor.current.onaudioprocess = (e) => {
+        const inputData = e.inputBuffer.getChannelData(0);
+        
+        // Convert Float32Array to Int16Array
+        const pcmData = new Int16Array(inputData.length);
+        for (let i = 0; i < inputData.length; i++) {
+          const s = Math.max(-1, Math.min(1, inputData[i]));
+          pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+
+        if (onAudioChunk) {
+          onAudioChunk(pcmData, inputData);
+        }
+        
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-          const inputData = e.inputBuffer.getChannelData(0);
-          
-          // Convert Float32Array to Int16Array
-          const pcmData = new Int16Array(inputData.length);
-          for (let i = 0; i < inputData.length; i++) {
-            const s = Math.max(-1, Math.min(1, inputData[i]));
-            pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-          }
-          
           ws.current.send(pcmData.buffer);
         }
       };
@@ -97,6 +104,7 @@ export default function AudioRecorder({ className }: AudioRecorderProps) {
       source.connect(processor.current);
       processor.current.connect(audioContext.current.destination);
       setRecording(true);
+      if (onRecordingChange) onRecordingChange(true);
 
     } catch (err: any) {
       console.error("Failed to start recording:", err);
@@ -123,6 +131,7 @@ export default function AudioRecorder({ className }: AudioRecorderProps) {
     }
     setRecording(false);
     setConnected(false);
+    if (onRecordingChange) onRecordingChange(false);
   };
 
   const toggleRecording = () => {
