@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { Mic, MicOff, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getWebSocketUrl } from '@/lib/api';
 
 interface AudioRecorderProps {
   className?: string;
@@ -35,13 +36,19 @@ export default function AudioRecorder({ className }: AudioRecorderProps) {
   const startRecording = async () => {
     try {
       setError(null);
-      // Use the current page's hostname so mobile devices on the same LAN can connect
-      const wsHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-      const wsUrl = `ws://${wsHost}:8000/ws/analyze`;
+      const isMobile = typeof navigator !== "undefined" && /Mobi|Android|iPhone/i.test(navigator.userAgent);
+      const wsUrl = getWebSocketUrl(sessionId, isMobile ? "mobile" : "client");
       ws.current = new WebSocket(wsUrl);
 
       ws.current.onopen = () => {
         setConnected(true);
+        if (sessionId && ws.current && ws.current.readyState === WebSocket.OPEN) {
+          ws.current.send(JSON.stringify({
+            action: "JOIN_SESSION",
+            session_id: sessionId,
+            role: isMobile ? "mobile" : "client"
+          }));
+        }
       };
 
       ws.current.onclose = () => {

@@ -28,14 +28,27 @@ export default function SocMenuBar({ currentRoute = "/demo", isBackendOnline }: 
   const [showQrModal, setShowQrModal] = useState(false);
   const [backendStatus, setBackendStatus] = useState<"online" | "offline">(isBackendOnline ? "online" : "offline");
   const [copied, setCopied] = useState(false);
-  const [sessionId, setSessionId] = useState("sih-session-2026");
-  const [origin, setOrigin] = useState("http://localhost:3000");
+  const [sessionId, setSessionId] = useState<string>("sih-session-2026");
+  const [isMobileConnected, setIsMobileConnected] = useState(false);
+
+  // Always use the PUBLIC deployed URL for QR so phones can actually reach it.
+  // process.env.NEXT_PUBLIC_APP_URL must be set to https://voice-shield-ai.vercel.app on Vercel.
+  // Fallback: use window.location.origin (works if accessed from a public / LAN URL).
+  const publicBase =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : 'https://voice-shield-ai.vercel.app');
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setOrigin(window.location.origin);
-      setSessionId(`sih-${Math.random().toString(36).substring(2, 8)}`);
-    }
+
+    // Initialize backend session
+    fetch(`${API_BASE}/session/start`, { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.session_id) setSessionId(data.session_id);
+      })
+      .catch(() => {
+        setSessionId(`sih-${Math.random().toString(36).substring(2, 9)}`);
+      });
 
     const check = async () => {
       const res = await checkBackendHealth();
@@ -46,7 +59,25 @@ export default function SocMenuBar({ currentRoute = "/demo", isBackendOnline }: 
     return () => clearInterval(interval);
   }, []);
 
-  const mobileUrl = `${origin}/mobile-client/${sessionId}`;
+  // Poll or check status when modal is open
+  useEffect(() => {
+    if (!showQrModal || !sessionId) return;
+
+    const checkPairing = () => {
+      fetch(`${API_BASE}/session/status/${sessionId}`)
+        .then((res) => res.json())
+        .then((status) => {
+          if (status.mobile_connected) setIsMobileConnected(true);
+        })
+        .catch(() => {});
+    };
+
+    checkPairing();
+    const interval = setInterval(checkPairing, 2500);
+    return () => clearInterval(interval);
+  }, [showQrModal, sessionId]);
+
+  const mobileUrl = `${publicBase.replace(/\/+$/, '')}/mobile-client/${sessionId}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(mobileUrl);
@@ -165,16 +196,29 @@ export default function SocMenuBar({ currentRoute = "/demo", isBackendOnline }: 
             <h3 className="text-lg font-bold text-white mb-1">
               Cross-Device Audio Bridge
             </h3>
-            <p className="text-xs text-vn-muted mb-5 leading-relaxed">
+            <p className="text-xs text-vn-muted mb-4 leading-relaxed">
               Scan this QR code with your smartphone camera to stream live audio directly into the SOC Console.
             </p>
 
+            {/* Pairing status badge */}
+            <div className="mb-4">
+              {isMobileConnected ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold animate-pulse">
+                  <Check className="w-3.5 h-3.5" /> SMARTPHONE PAIRED • AUDIO BRIDGE ACTIVE
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-vn-cyan/10 border border-vn-cyan/30 text-vn-cyan text-xs font-mono">
+                  WAITING FOR SMARTPHONE SCAN...
+                </span>
+              )}
+            </div>
+
             {/* QR Code Container */}
-            <div className="inline-block p-4 bg-white rounded-2xl shadow-lg mb-5">
+            <div className="inline-block p-4 bg-white rounded-2xl shadow-xl shadow-vn-cyan/20 border-2 border-vn-cyan/30 mb-5">
               <QRCodeSVG
                 value={mobileUrl}
                 size={190}
-                level="M"
+                level="Q"
                 includeMargin={false}
               />
             </div>

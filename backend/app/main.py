@@ -625,15 +625,34 @@ def from_app_patterns():
 # ---------------------------------------------------------------------
 
 @app.websocket("/ws/analyze")
-async def websocket_analyze(websocket: WebSocket):
+async def websocket_analyze(websocket: WebSocket, session_id: str = None, role: str = "client"):
     """
-    Continuous real-time audio chunk processing.
-    Receives raw PCM / WAV chunks from the browser microphone.
-    Maintains a rolling 3.0-second analysis window and pushes live telemetry & AI detections.
+    Continuous real-time audio chunk processing & Cross-Device Audio Bridge.
+    Receives raw PCM / WAV chunks from browser/mobile microphones.
+    Maintains rolling analysis window and broadcasts live telemetry & AI detections to session subscribers.
     """
     await websocket.accept()
     client_id = f"client-{uuid.uuid4().hex[:6]}"
-    print(f"[WS] Client connected: {client_id}")
+    active_session_id = session_id
+    current_role = role
+    print(f"[WS] Client connected: {client_id} (session: {active_session_id}, role: {current_role})")
+
+    if active_session_id:
+        if active_session_id not in session_subscribers:
+            session_subscribers[active_session_id] = set()
+        session_subscribers[active_session_id].add(websocket)
+        if active_session_id not in connected_sessions:
+            connected_sessions[active_session_id] = {"status": "connected", "mobile_connected": (current_role == "mobile")}
+        elif current_role == "mobile":
+            connected_sessions[active_session_id]["mobile_connected"] = True
+
+        asyncio.create_task(broadcast_to_session(active_session_id, {
+            "event": "PEER_JOINED",
+            "session_id": active_session_id,
+            "role": current_role,
+            "client_id": client_id,
+            "timestamp": time.time(),
+        }, exclude=websocket))
 
     # Buffer holds up to ~3.0s of 16kHz mono audio (48,000 samples)
     BUFFER_CAPACITY = 48000
@@ -647,6 +666,8 @@ async def websocket_analyze(websocket: WebSocket):
         await websocket.send_json({
             "event": "CONNECTED",
             "client_id": client_id,
+            "session_id": active_session_id,
+            "role": current_role,
             "message": "Voice Shield AI SOC Engine connected.",
             "timestamp": time.time(),
         })
@@ -672,12 +693,19 @@ async def websocket_analyze(websocket: WebSocket):
                 # Emit immediate audio received event with waveform points
                 telemetry = audio_preprocessor.compute_telemetry(audio_buffer, 16000)
                 sub_wave = audio_buffer[::max(1, len(audio_buffer) // 64)].tolist()
-                await websocket.send_json({
+                waveform_data = [round(float(v), 3) for v in sub_wave[-64:]]
+                
+                audio_event = {
                     "event": "AUDIO_RECEIVED",
                     "telemetry": telemetry,
-                    "waveform": [round(float(v), 3) for v in sub_wave[-64:]],
+                    "waveform": waveform_data,
+                    "source": current_role,
+                    "session_id": active_session_id,
                     "timestamp": time.time(),
-                })
+                }
+                await websocket.send_json(audio_event)
+                if active_session_id:
+                    asyncio.create_task(broadcast_to_session(active_session_id, audio_event, exclude=websocket))
 
                 # Run heavy AI analysis only if speech is detected and throttled to ~1.0s intervals
                 now = time.time()
@@ -749,8 +777,10 @@ async def websocket_analyze(websocket: WebSocket):
                     })
 
                     # Full State Snapshot for responsive single-page sync
-                    await websocket.send_json({
+                    snapshot_event = {
                         "event": "STATE_SNAPSHOT",
+                        "source": current_role,
+                        "session_id": active_session_id,
                         "data": {
                             "telemetry": telemetry,
                             "voice_authenticity": voice_res,
@@ -762,14 +792,46 @@ async def websocket_analyze(websocket: WebSocket):
                             "prevention": decision_res,
                             "latency_sec": round(time.time() - now, 3),
                         },
-                    })
+                    }
+                    await websocket.send_json(snapshot_event)
+                    if active_session_id:
+                        asyncio.create_task(broadcast_to_session(active_session_id, snapshot_event, exclude=websocket))
 
             elif "text" in message and message["text"]:
                 try:
                     payload = json.loads(message["text"])
                     action = payload.get("action")
 
-                    if action == "SET_CLAIMED_IDENTITY":
+                    if action == "JOIN_SESSION":
+                        new_sess = payload.get("session_id")
+                        if new_sess:
+                            if active_session_id and active_session_id in session_subscribers:
+                                session_subscribers[active_session_id].discard(websocket)
+                            active_session_id = new_sess
+                            current_role = payload.get("role", current_role)
+                            if active_session_id not in session_subscribers:
+                                session_subscribers[active_session_id] = set()
+                            session_subscribers[active_session_id].add(websocket)
+                            if active_session_id not in connected_sessions:
+                                connected_sessions[active_session_id] = {"status": "connected", "mobile_connected": (current_role == "mobile")}
+                            elif current_role == "mobile":
+                                connected_sessions[active_session_id]["mobile_connected"] = True
+                            
+                            join_ack = {
+                                "event": "SESSION_JOINED",
+                                "session_id": active_session_id,
+                                "role": current_role,
+                            }
+                            await websocket.send_json(join_ack)
+                            asyncio.create_task(broadcast_to_session(active_session_id, {
+                                "event": "PEER_JOINED",
+                                "session_id": active_session_id,
+                                "role": current_role,
+                                "client_id": client_id,
+                                "timestamp": time.time(),
+                            }, exclude=websocket))
+
+                    elif action == "SET_CLAIMED_IDENTITY":
                         claimed_identity = payload.get("claimed_identity")
                         await websocket.send_json({
                             "event": "IDENTITY_SET",
@@ -795,6 +857,15 @@ async def websocket_analyze(websocket: WebSocket):
         print(f"[WS] Client disconnected: {client_id}")
     except Exception as e:
         print(f"[WS] Exception: {e}")
+    finally:
+        if active_session_id and active_session_id in session_subscribers:
+            session_subscribers[active_session_id].discard(websocket)
+            asyncio.create_task(broadcast_to_session(active_session_id, {
+                "event": "PEER_LEFT",
+                "session_id": active_session_id,
+                "role": current_role,
+                "timestamp": time.time(),
+            }))
 
 # ---------------------------------------------------------------------
 # Blockchain Ledger REST Endpoints
@@ -808,22 +879,53 @@ def tamper_ledger(block_number: int):
     return ledger.simulate_tamper(block_number)
 
 # ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # QR Session Connect
 # ---------------------------------------------------------------------
 connected_sessions = {}
+session_subscribers = {}
+
+async def broadcast_to_session(session_id: str, message: dict, exclude: WebSocket = None):
+    if not session_id or session_id not in session_subscribers:
+        return
+    dead = []
+    for ws in list(session_subscribers[session_id]):
+        if ws != exclude:
+            try:
+                await ws.send_json(message)
+            except Exception:
+                dead.append(ws)
+    for ws in dead:
+        session_subscribers[session_id].discard(ws)
 
 @app.post("/session/start")
 def start_session():
-    session_id = str(uuid.uuid4())
-    connected_sessions[session_id] = {"status": "waiting"}
-    return {"session_id": session_id}
+    session_id = f"sih-{uuid.uuid4().hex[:8]}"
+    connected_sessions[session_id] = {
+        "status": "waiting",
+        "created_at": time.time(),
+        "mobile_connected": False
+    }
+    return {"session_id": session_id, "status": "waiting"}
 
 @app.post("/session/join/{session_id}")
 def join_session(session_id: str):
-    if session_id in connected_sessions:
+    if session_id not in connected_sessions:
+        connected_sessions[session_id] = {
+            "status": "connected",
+            "created_at": time.time(),
+            "mobile_connected": True
+        }
+    else:
         connected_sessions[session_id]["status"] = "connected"
-        return {"success": True}
-    return {"success": False, "error": "Invalid session ID"}
+        connected_sessions[session_id]["mobile_connected"] = True
+    return {"success": True, "session_id": session_id, "status": "connected"}
+
+@app.get("/session/status/{session_id}")
+def get_session_status(session_id: str):
+    if session_id in connected_sessions:
+        return connected_sessions[session_id]
+    return {"status": "waiting", "mobile_connected": False}
 
 # ---------------------------------------------------------------------
 # Zero Trust Continuous Authentication Streaming (SIH26104 proper solution)

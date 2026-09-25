@@ -2,14 +2,32 @@
 export const API_BASE = 
   process.env.NEXT_PUBLIC_API_BASE || 
   (typeof window !== 'undefined'
-    ? `http://${window.location.hostname}:8000`
+    ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.')
+        ? `${window.location.protocol}//${window.location.hostname}:8000`
+        : window.location.origin)
     : 'http://localhost:8000');
 
-export function getWebSocketUrl(): string {
-  if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL;
-  if (typeof window === 'undefined') return 'ws://localhost:8000/ws/analyze';
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.hostname}:8000/ws/analyze`;
+export function getWebSocketUrl(sessionId?: string | null, role: string = 'client'): string {
+  let baseWs: string;
+  if (process.env.NEXT_PUBLIC_WS_URL) {
+    baseWs = process.env.NEXT_PUBLIC_WS_URL;
+  } else if (process.env.NEXT_PUBLIC_API_BASE) {
+    baseWs = process.env.NEXT_PUBLIC_API_BASE.replace(/^http/, 'ws').replace(/\/+$/, '') + '/ws/analyze';
+  } else if (typeof window === 'undefined') {
+    baseWs = 'ws://localhost:8000/ws/analyze';
+  } else {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.');
+    const port = isLocal ? ':8000' : '';
+    baseWs = `${protocol}//${host}${port}/ws/analyze`;
+  }
+
+  if (sessionId) {
+    const delim = baseWs.includes('?') ? '&' : '?';
+    return `${baseWs}${delim}session_id=${encodeURIComponent(sessionId)}&role=${encodeURIComponent(role)}`;
+  }
+  return baseWs;
 }
 
 export async function checkBackendHealth(): Promise<{ status: string; registered_speakers?: string[]; [key: string]: any }> {

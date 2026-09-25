@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/toast-provider";
+import SecurityShield from "@/components/SecurityShield";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -29,8 +30,11 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-vn-navy text-vn-text">
-        <ToastProvider>{children}</ToastProvider>
+      <body className="min-h-full bg-vn-navy text-vn-text select-none">
+        <ToastProvider>
+          <SecurityShield />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );
