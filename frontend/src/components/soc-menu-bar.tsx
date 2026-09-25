@@ -40,7 +40,7 @@ export default function SocMenuBar({ currentRoute = "/demo", isBackendOnline }: 
 
   const publicBase =
     process.env.NEXT_PUBLIC_APP_URL ||
-    (!isLocalHost && typeof window !== 'undefined' ? window.location.origin : 'https://voice-shield-ai.vercel.app');
+    (!isLocalHost && typeof window !== 'undefined' ? window.location.origin : 'https://vaani-shield.vercel.app');
 
   useEffect(() => {
 
